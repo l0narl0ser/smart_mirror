@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../services/mqtt_service.dart';
 import 'settings_screen.dart';
+import '../features/ble_onboarding/presentation/screens/ble_scan_screen.dart';
+import '../features/ble_onboarding/presentation/screens/connection_status_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -19,6 +21,9 @@ class _MainScreenState extends State<MainScreen> {
   String? _currentAlarm;
   String? _currentPhrase;
   String _lastMessage = '';
+  int _selectedIndex = 0;
+
+  final List<Widget> _tabs = [];
 
   @override
   void initState() {
@@ -33,6 +38,28 @@ class _MainScreenState extends State<MainScreen> {
         _lastMessage = '[$topic] $payload';
       });
     };
+    _tabs.addAll([
+      _buildControlTab(),
+      const BleScanScreen(),
+      const ConnectionStatusScreen(),
+    ]);
+  }
+
+  Widget _buildControlTab() {
+    return ListView(
+      padding: const EdgeInsets.all(16.0),
+      children: [
+        _buildConnectionStatus(),
+        const SizedBox(height: 24),
+        _buildAlarmCard(),
+        const SizedBox(height: 16),
+        _buildPhraseCard(),
+        const SizedBox(height: 16),
+        _buildDeviceCard(),
+        const SizedBox(height: 16),
+        _buildMessageLog(),
+      ],
+    );
   }
 
   Future<void> _setAlarm() async {
@@ -157,7 +184,7 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Smart Mirror Control'),
+        title: const Text('Smart Mirror'),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
@@ -165,18 +192,33 @@ class _MainScreenState extends State<MainScreen> {
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16.0),
-        children: [
-          _buildConnectionStatus(),
-          const SizedBox(height: 24),
-          _buildAlarmCard(),
-          const SizedBox(height: 16),
-          _buildPhraseCard(),
-          const SizedBox(height: 16),
-          _buildDeviceCard(),
-          const SizedBox(height: 16),
-          _buildMessageLog(),
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _tabs,
+      ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _selectedIndex,
+        onDestinationSelected: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
+            label: 'Control',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.bluetooth_searching),
+            selectedIcon: Icon(Icons.bluetooth),
+            label: 'BLE Setup',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.signal_cellular_alt),
+            selectedIcon: Icon(Icons.signal_cellular_alt),
+            label: 'Status',
+          ),
         ],
       ),
     );

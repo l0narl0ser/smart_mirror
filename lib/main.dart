@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'services/settings_service.dart';
+import 'features/ble_onboarding/data/service/ble_service.dart';
 import 'screens/main_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SettingsService().init();
+  await BleService().init();
   runApp(const MyApp());
 }
 
