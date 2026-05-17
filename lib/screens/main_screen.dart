@@ -3,6 +3,7 @@ import '../services/mqtt_service.dart';
 import 'settings_screen.dart';
 import '../features/ble_onboarding/presentation/screens/ble_scan_screen.dart';
 import '../features/ble_onboarding/presentation/screens/connection_status_screen.dart';
+import '../features/alarms_phrases/presentation/screens/alarms_phrases_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -13,13 +14,8 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   final _mqttService = MqttService();
-  final _alarmHourController = TextEditingController();
-  final _alarmMinuteController = TextEditingController();
-  final _phraseController = TextEditingController();
 
   String _connectionStatus = 'Not connected';
-  String? _currentAlarm;
-  String? _currentPhrase;
   String _lastMessage = '';
   int _selectedIndex = 0;
 
@@ -40,6 +36,7 @@ class _MainScreenState extends State<MainScreen> {
     };
     _tabs.addAll([
       _buildControlTab(),
+      const AlarmsPhrasesScreen(),
       const BleScanScreen(),
       const ConnectionStatusScreen(),
     ]);
@@ -51,87 +48,10 @@ class _MainScreenState extends State<MainScreen> {
       children: [
         _buildConnectionStatus(),
         const SizedBox(height: 24),
-        _buildAlarmCard(),
-        const SizedBox(height: 16),
-        _buildPhraseCard(),
-        const SizedBox(height: 16),
         _buildDeviceCard(),
         const SizedBox(height: 16),
         _buildMessageLog(),
       ],
-    );
-  }
-
-  Future<void> _setAlarm() async {
-    final hour = int.tryParse(_alarmHourController.text);
-    final minute = int.tryParse(_alarmMinuteController.text);
-
-    if (hour == null || minute == null || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid time. Hour: 0-23, Minute: 0-59')),
-      );
-      return;
-    }
-
-    try {
-      await _mqttService.setAlarm(hour, minute);
-      if (!mounted) return;
-      setState(() {
-        _currentAlarm = '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Alarm set to $_currentAlarm')),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to set alarm: $e')),
-      );
-    }
-  }
-
-  Future<void> _clearAlarm() async {
-    try {
-      await _mqttService.clearAlarm();
-      if (!mounted) return;
-      setState(() {
-        _currentAlarm = null;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Alarm cleared')),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to clear alarm: $e')),
-      );
-    }
-  }
-
-  Future<void> _setPhrase() async {
-    final phrase = _phraseController.text.trim();
-    if (phrase.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a phrase')),
-      );
-      return;
-    }
-
-    setState(() {
-      _currentPhrase = phrase;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Phrase set')),
-    );
-  }
-
-  Future<void> _clearPhrase() async {
-    setState(() {
-      _currentPhrase = null;
-      _phraseController.clear();
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Phrase cleared')),
     );
   }
 
@@ -210,6 +130,11 @@ class _MainScreenState extends State<MainScreen> {
             label: 'Control',
           ),
           NavigationDestination(
+            icon: Icon(Icons.alarm_outlined),
+            selectedIcon: Icon(Icons.alarm),
+            label: 'Alarms',
+          ),
+          NavigationDestination(
             icon: Icon(Icons.bluetooth_searching),
             selectedIcon: Icon(Icons.bluetooth),
             label: 'BLE Setup',
@@ -246,123 +171,6 @@ class _MainScreenState extends State<MainScreen> {
             ),
             const SizedBox(height: 8),
             Text(_connectionStatus),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAlarmCard() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Set Alarm',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _alarmHourController,
-                    decoration: const InputDecoration(
-                      labelText: 'Hour (0-23)',
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: TextField(
-                    controller: _alarmMinuteController,
-                    decoration: const InputDecoration(
-                      labelText: 'Minute (0-59)',
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _setAlarm,
-                    child: const Text('Set Alarm'),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: _clearAlarm,
-                    child: const Text('Clear Alarm'),
-                  ),
-                ),
-              ],
-            ),
-            if (_currentAlarm != null) ...[
-              const SizedBox(height: 8),
-              Text('Current alarm: $_currentAlarm'),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPhraseCard() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Phrase',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _phraseController,
-              decoration: const InputDecoration(
-                labelText: 'Enter phrase',
-                hintText: 'Type your phrase here...',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _setPhrase,
-                    child: const Text('Set Phrase'),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: _clearPhrase,
-                    child: const Text('Clear'),
-                  ),
-                ),
-              ],
-            ),
-            if (_currentPhrase != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                'Current phrase: $_currentPhrase',
-                style: const TextStyle(fontStyle: FontStyle.italic),
-              ),
-            ],
           ],
         ),
       ),
@@ -423,13 +231,5 @@ class _MainScreenState extends State<MainScreen> {
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _alarmHourController.dispose();
-    _alarmMinuteController.dispose();
-    _phraseController.dispose();
-    super.dispose();
   }
 }
