@@ -53,14 +53,20 @@ class BleService {
     );
 
     _scanSubscription = FlutterBluePlus.scanResults.listen((results) {
-      final devices = results
-          .where((r) => r.device.platformName.isNotEmpty)
-          .map((result) => BleDeviceModel(
-                id: result.device.remoteId.str,
-                name: result.device.platformName,
-                rssi: result.rssi,
-              ))
-          .toList();
+      final devices = results.map((result) {
+        // platformName may be empty on Android until the OS caches it.
+        // Fall back to advertisementData.advName, then to a placeholder.
+        final name = result.device.platformName.isNotEmpty
+            ? result.device.platformName
+            : result.advertisementData.advName.isNotEmpty
+                ? result.advertisementData.advName
+                : result.device.remoteId.str;
+        return BleDeviceModel(
+          id: result.device.remoteId.str,
+          name: name,
+          rssi: result.rssi,
+        );
+      }).toList();
       _scanResultsController.add(devices);
     });
   }
