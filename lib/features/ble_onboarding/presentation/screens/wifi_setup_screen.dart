@@ -72,19 +72,46 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text('Success'),
-        content: const Text('Smart Mirror connected to Wi-Fi successfully!'),
+        title: const Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.green),
+            SizedBox(width: 8),
+            Text('Connected!'),
+          ],
+        ),
+        content: const Text(
+          'Smart Mirror successfully connected to Wi-Fi.\n\n'
+          'Want to switch to a different network?',
+        ),
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.of(context).pop();
-              Navigator.of(context).pop(true);
+              Navigator.of(context).pop(); // close dialog
+              _resetForNetworkSwitch();   // stay on screen, reset form
             },
-            child: const Text('OK'),
+            child: const Text('Change Network'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // close dialog
+              Navigator.of(context).pop(true); // return to scan screen
+            },
+            child: const Text('Done'),
           ),
         ],
       ),
     );
+  }
+
+  /// Resets the form so the user can send new Wi-Fi credentials
+  /// without disconnecting from the device.
+  void _resetForNetworkSwitch() {
+    setState(() {
+      _isSending = false;
+      _ssidController.clear();
+      _passwordController.clear();
+      _deviceStatus = 'Enter new network credentials';
+    });
   }
 
   Future<void> _sendCredentials() async {
@@ -140,7 +167,7 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Wi-Fi Setup - ${widget.deviceName}'),
+        title: Text('Wi-Fi — ${widget.deviceName}'),
         actions: [
           IconButton(
             icon: const Icon(Icons.bluetooth_disabled),
@@ -281,7 +308,7 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
                         ),
                       )
                     : const Icon(Icons.send),
-                label: Text(_isSending ? 'Sending...' : 'Send Wi-Fi Credentials'),
+                label: Text(_isSending ? 'Sending...' : 'Connect / Switch Network'),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),

@@ -19,6 +19,7 @@ class BleService {
   BluetoothCharacteristic? _statusCharacteristic;
   StreamSubscription<List<int>>? _statusSubscription;
   StreamSubscription<BluetoothAdapterState>? _adapterStateSubscription;
+  StreamSubscription<List<ScanResult>>? _scanSubscription;
 
   final _scanResultsController = StreamController<List<BleDeviceModel>>.broadcast();
   Stream<List<BleDeviceModel>> get scanResultsStream => _scanResultsController.stream;
@@ -41,27 +42,38 @@ class BleService {
   }
 
   Future<void> startScan({Duration timeout = const Duration(seconds: 10)}) async {
+    // Cancel any previous scan subscription to prevent memory leaks
+    _scanSubscription?.cancel();
+
+    // Filter by our service UUID — BlueZ always includes it in the
+    // advertisement packet, even when the device name is not yet cached.
+    // This is more reliable than filtering by platformName on Android/iOS.
     await FlutterBluePlus.startScan(
       timeout: timeout,
       androidUsesFineLocation: true,
+      withServices: [Guid(serviceUuid)],
     );
 
-    FlutterBluePlus.scanResults.listen((results) {
-      final devices = <BleDeviceModel>[];
-      for (final result in results) {
-        if (result.device.platformName.isNotEmpty) {
-          devices.add(BleDeviceModel(
-            id: result.device.remoteId.str,
-            name: result.device.platformName,
-            rssi: result.rssi,
-          ));
-        }
-      }
+    _scanSubscription = FlutterBluePlus.scanResults.listen((results) {
+      final devices = results.map((result) {
+        // platformName may be empty on first scan before the OS caches the
+        // device name — fall back to the known device name.
+        final name = result.device.platformName.isNotEmpty
+            ? result.device.platformName
+            : targetDeviceName;
+        return BleDeviceModel(
+          id: result.device.remoteId.str,
+          name: name,
+          rssi: result.rssi,
+        );
+      }).toList();
       _scanResultsController.add(devices);
     });
   }
 
   Future<void> stopScan() async {
+    _scanSubscription?.cancel();
+    _scanSubscription = null;
     await FlutterBluePlus.stopScan();
   }
 
@@ -153,6 +165,7 @@ class BleService {
   }
 
   void dispose() {
+    _scanSubscription?.cancel();
     _statusSubscription?.cancel();
     _adapterStateSubscription?.cancel();
     _scanResultsController.close();
