@@ -45,25 +45,19 @@ class BleService {
     // Cancel any previous scan subscription to prevent memory leaks
     _scanSubscription?.cancel();
 
-    // Note: bless on Linux/BlueZ does not reliably include the Service UUID
-    // in the raw advertisement packet, so withServices filter misses the Pi.
-    // We scan without UUID filter and manually filter by device name instead.
+    // No name/UUID filter — show all BLE devices so the user can pick their Pi
+    // regardless of what name it advertises (hostname vs alias).
     await FlutterBluePlus.startScan(
       timeout: timeout,
       androidUsesFineLocation: true,
-      withNames: [targetDeviceName],
     );
 
     _scanSubscription = FlutterBluePlus.scanResults.listen((results) {
       final devices = results
-          .where((r) =>
-              r.device.platformName == targetDeviceName ||
-              r.advertisementData.advName == targetDeviceName)
+          .where((r) => r.device.platformName.isNotEmpty)
           .map((result) => BleDeviceModel(
                 id: result.device.remoteId.str,
-                name: result.device.platformName.isNotEmpty
-                    ? result.device.platformName
-                    : targetDeviceName,
+                name: result.device.platformName,
                 rssi: result.rssi,
               ))
           .toList();
