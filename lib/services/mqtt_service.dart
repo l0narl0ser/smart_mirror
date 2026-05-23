@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
 
@@ -8,7 +9,8 @@ class MqttService {
   MqttService._internal();
 
   MqttServerClient? _client;
-  String _broker = '192.168.0.212';
+  String _brokerHost = 'zompie.local';
+  String _broker = '';
   int _port = 1883;
   String _topicPrefix = 'mirror/';
   bool _isConnected = false;
@@ -18,6 +20,14 @@ class MqttService {
   Function(String topic, String payload)? onMessageReceived;
   Function(String status)? onConnectionStatusChanged;
 
+  Future<String> _resolveHost(String host) async {
+    final result = await InternetAddress.lookup(host);
+    if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
+      return result[0].address;
+    }
+    throw Exception('Не удалось разрешить хост: $host');
+  }
+
   Future<void> connect({
     String? broker,
     int? port,
@@ -26,9 +36,11 @@ class MqttService {
     String? username,
     String? password,
   }) async {
-    _broker = broker ?? _broker;
+    _brokerHost = broker ?? _brokerHost;
     _port = port ?? _port;
     _topicPrefix = topicPrefix ?? _topicPrefix;
+
+    _broker = await _resolveHost(_brokerHost);
 
     _client = MqttServerClient(_broker, clientId ?? 'smart_mirror_ui');
     _client!.port = _port;
