@@ -25,6 +25,7 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
   final _passwordController = TextEditingController();
 
   bool _isSending = false;
+  bool _obscurePassword = true;
   String _deviceStatus = 'Waiting for input';
   StreamSubscription<String>? _statusSubscription;
 
@@ -39,6 +40,9 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
       if (!mounted) return;
       setState(() {
         _deviceStatus = _mapStatusToMessage(status);
+        if (status == 'connected' || status == 'wrong_password' || status == 'error') {
+          _isSending = false;
+        }
       });
 
       if (status == 'connected') {
@@ -48,6 +52,13 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
           const SnackBar(
             content: Text('Wrong Wi-Fi password. Please try again.'),
             backgroundColor: Colors.red,
+          ),
+        );
+      } else if (status == 'error') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to connect to Wi-Fi. Check the network name and try again.'),
+            backgroundColor: Colors.orange,
           ),
         );
       }
@@ -62,6 +73,10 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
         return 'Successfully connected to Wi-Fi!';
       case 'wrong_password':
         return 'Wrong Wi-Fi password';
+      case 'error':
+        return 'Connection failed. Check network name and password.';
+      case 'no_internet':
+        return 'Connected but no internet access';
       default:
         return 'Status: $status';
     }
@@ -176,13 +191,11 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+      body: Form(
+        key: _formKey,
+        child: ListView(
+          padding: const EdgeInsets.all(16.0),
+          children: [
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -236,13 +249,23 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _passwordController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Wi-Fi Password',
                   hintText: 'Enter your Wi-Fi password',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.lock),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                  ),
                 ),
-                obscureText: true,
+                obscureText: _obscurePassword,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter Wi-Fi password';
@@ -322,7 +345,6 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
             ],
           ),
         ),
-      ),
     );
   }
 }

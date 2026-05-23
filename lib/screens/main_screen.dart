@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../services/mqtt_service.dart';
 import 'settings_screen.dart';
 import '../features/ble_onboarding/presentation/screens/ble_scan_screen.dart';
-import '../features/ble_onboarding/presentation/screens/connection_status_screen.dart';
 import '../features/alarms_phrases/presentation/screens/alarms_phrases_screen.dart';
 
 class MainScreen extends StatefulWidget {
@@ -15,7 +14,6 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   final _mqttService = MqttService();
 
-  String _connectionStatus = 'Not connected';
   String _lastMessage = '';
   int _selectedIndex = 0;
 
@@ -24,11 +22,6 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
-    _mqttService.onConnectionStatusChanged = (status) {
-      setState(() {
-        _connectionStatus = status;
-      });
-    };
     _mqttService.onMessageReceived = (topic, payload) {
       setState(() {
         _lastMessage = '[$topic] $payload';
@@ -38,7 +31,6 @@ class _MainScreenState extends State<MainScreen> {
       _buildControlTab(),
       const AlarmsPhrasesScreen(),
       const BleScanScreen(),
-      const ConnectionStatusScreen(),
     ]);
   }
 
@@ -46,8 +38,6 @@ class _MainScreenState extends State<MainScreen> {
     return ListView(
       padding: const EdgeInsets.all(16.0),
       children: [
-        _buildConnectionStatus(),
-        const SizedBox(height: 24),
         _buildDeviceCard(),
         const SizedBox(height: 16),
         _buildMessageLog(),
@@ -139,40 +129,7 @@ class _MainScreenState extends State<MainScreen> {
             selectedIcon: Icon(Icons.bluetooth),
             label: 'BLE Setup',
           ),
-          NavigationDestination(
-            icon: Icon(Icons.signal_cellular_alt),
-            selectedIcon: Icon(Icons.signal_cellular_alt),
-            label: 'Status',
-          ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildConnectionStatus() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  _mqttService.isConnected ? Icons.cloud_done : Icons.cloud_off,
-                  color: _mqttService.isConnected ? Colors.green : Colors.red,
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  'Connection Status',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(_connectionStatus),
-          ],
-        ),
       ),
     );
   }

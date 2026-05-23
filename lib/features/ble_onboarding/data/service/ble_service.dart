@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import '../../models/ble_device_model.dart';
 import '../../models/wifi_credentials.dart';
@@ -45,22 +46,23 @@ class BleService {
     // Cancel any previous scan subscription to prevent memory leaks
     _scanSubscription?.cancel();
 
-    // No name/UUID filter — show all BLE devices so the user can pick their Pi
-    // regardless of what name it advertises (hostname vs alias).
     await FlutterBluePlus.startScan(
       timeout: timeout,
       androidUsesFineLocation: true,
+      withServices: [Guid(serviceUuid)],
     );
 
     _scanSubscription = FlutterBluePlus.scanResults.listen((results) {
       final devices = results.map((result) {
-        // platformName may be empty on Android until the OS caches it.
-        // Fall back to advertisementData.advName, then to a placeholder.
-        final name = result.device.platformName.isNotEmpty
-            ? result.device.platformName
-            : result.advertisementData.advName.isNotEmpty
-                ? result.advertisementData.advName
+        final platformName = result.device.platformName;
+        final advName = result.advertisementData.advName;
+        
+        final name = platformName.isNotEmpty
+            ? platformName
+            : advName.isNotEmpty
+                ? advName
                 : result.device.remoteId.str;
+        
         return BleDeviceModel(
           id: result.device.remoteId.str,
           name: name,
@@ -128,15 +130,18 @@ class BleService {
 
     _statusSubscription?.cancel();
     _statusSubscription = _statusCharacteristic!.lastValueStream.listen((value) {
-      if (value.isNotEmpty) {
-        try {
-          final response = utf8.decode(value);
-          final json = jsonDecode(response) as Map<String, dynamic>;
-          final status = json['status'] as String? ?? '';
+      if (value.isEmpty) return;
+
+      try {
+        final response = utf8.decode(value);
+        final json = jsonDecode(response) as Map<String, dynamic>;
+        final status = json['status'] as String? ?? '';
+        if (status.isNotEmpty) {
+          debugPrint('BLE status received: $status');
           _deviceStatusController.add(status);
-        } catch (e) {
-          _deviceStatusController.add('error');
         }
+      } catch (e) {
+        debugPrint('BLE status parse error: $e, raw: ${value.toString()}');
       }
     });
   }

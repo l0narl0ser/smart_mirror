@@ -18,8 +18,10 @@ class _BleScanScreenState extends State<BleScanScreen> {
   final List<BleDeviceModel> _devices = [];
   bool _isScanning = false;
   bool _permissionsGranted = false;
+  bool _locationServicesEnabled = false;
   String _statusMessage = 'Check permissions to start scanning';
   StreamSubscription<List<BleDeviceModel>>? _scanSubscription;
+  Timer? _scanTimeoutTimer;
 
   @override
   void initState() {
@@ -32,9 +34,16 @@ class _BleScanScreenState extends State<BleScanScreen> {
     final bluetoothConnect = await Permission.bluetoothConnect.request();
     final location = await Permission.locationWhenInUse.request();
 
+    final locationEnabled = await Permission.location.serviceStatus.isEnabled;
+
+    setState(() {
+      _locationServicesEnabled = locationEnabled;
+    });
+
     if (bluetoothScan.isGranted &&
         bluetoothConnect.isGranted &&
-        location.isGranted) {
+        location.isGranted &&
+        locationEnabled) {
       setState(() {
         _permissionsGranted = true;
         _statusMessage = 'Tap scan to find devices';
@@ -42,12 +51,52 @@ class _BleScanScreenState extends State<BleScanScreen> {
     } else {
       setState(() {
         _permissionsGranted = false;
-        _statusMessage = 'Permissions denied. Please enable them in settings.';
+        if (!locationEnabled) {
+          _statusMessage = 'Location services are OFF. BLE scanning requires GPS to be enabled.';
+        } else {
+          _statusMessage = 'Permissions denied. Please enable them in settings.';
+        }
       });
     }
   }
 
+  Future<void> _enableLocationServices() async {
+    await openAppSettings();
+    await Future.delayed(const Duration(seconds: 2));
+    await _checkPermissions();
+  }
+
   Future<void> _startScan() async {
+    final locationEnabled = await Permission.location.serviceStatus.isEnabled;
+    if (!locationEnabled) {
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Location Services Required'),
+            content: const Text(
+              'BLE scanning requires Location services (GPS) to be enabled on Android. '
+              'Please enable it in your device settings.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _enableLocationServices();
+                },
+                child: const Text('Open Settings'),
+              ),
+            ],
+          ),
+        );
+      }
+      return;
+    }
+
     if (!_permissionsGranted) {
       await _checkPermissions();
       if (!_permissionsGranted) return;
@@ -59,12 +108,25 @@ class _BleScanScreenState extends State<BleScanScreen> {
       _statusMessage = 'Scanning for devices...';
     });
 
+    _scanTimeoutTimer?.cancel();
+    _scanTimeoutTimer = Timer(const Duration(seconds: 30), () {
+      if (mounted && _isScanning) {
+        _handleScanTimeout();
+      }
+    });
+
     _scanSubscription?.cancel();
     _scanSubscription = _bleRepository.scanResultsStream.listen((devices) {
-      setState(() {
-        _devices.clear();
-        _devices.addAll(devices);
-      });
+      if (mounted) {
+        setState(() {
+          _devices.clear();
+          _devices.addAll(devices);
+        });
+        debugPrint('BLE Scan: found ${devices.length} device(s)');
+        for (final d in devices) {
+          debugPrint('  - ${d.name} (${d.id}) RSSI: ${d.rssi}');
+        }
+      }
     });
 
     await _bleRepository.startScan(timeout: const Duration(seconds: 10));
@@ -74,14 +136,53 @@ class _BleScanScreenState extends State<BleScanScreen> {
     if (mounted) {
       setState(() {
         _isScanning = false;
-        _statusMessage = _devices.isEmpty
-            ? 'No devices found. Make sure SMART_MIRROR is powered on.'
-            : 'Found ${_devices.length} device(s)';
+        if (_devices.isEmpty) {
+          _statusMessage = 'No devices found. Make sure SMART_MIRROR is powered on.';
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No devices found.'),
+              duration: Duration(seconds: 3),
+            ),
+          );
+          Future.delayed(const Duration(seconds: 3), () {
+            if (mounted) {
+              setState(() {
+                _statusMessage = 'Tap scan to find devices';
+              });
+            }
+          });
+        } else {
+          _statusMessage = 'Found ${_devices.length} device(s)';
+        }
+      });
+    }
+  }
+
+  Future<void> _handleScanTimeout() async {
+    await _stopScan();
+    if (mounted) {
+      setState(() {
+        _statusMessage = 'No devices found within 30 seconds. Please try again.';
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Scan timeout: No devices found.'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted) {
+          setState(() {
+            _statusMessage = 'Tap scan to find devices';
+          });
+        }
       });
     }
   }
 
   Future<void> _stopScan() async {
+    _scanTimeoutTimer?.cancel();
+    _scanTimeoutTimer = null;
     await _bleRepository.stopScan();
     if (mounted) {
       setState(() {
@@ -126,6 +227,7 @@ class _BleScanScreenState extends State<BleScanScreen> {
   @override
   void dispose() {
     _scanSubscription?.cancel();
+    _scanTimeoutTimer?.cancel();
     _bleRepository.stopScan();
     super.dispose();
   }
@@ -142,23 +244,54 @@ class _BleScanScreenState extends State<BleScanScreen> {
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
-                Text(
-                  _statusMessage,
-                  style: TextStyle(
-                    color: _statusMessage.contains('failed')
-                        ? Colors.red
-                        : _statusMessage.contains('Found')
-                            ? Colors.green
-                            : Colors.grey,
-                  ),
-                  textAlign: TextAlign.center,
+                Row(
+                  children: [
+                    Icon(
+                      _locationServicesEnabled
+                          ? Icons.location_on
+                          : Icons.location_off,
+                      color: _locationServicesEnabled
+                          ? Colors.green
+                          : Colors.red,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _statusMessage,
+                        style: TextStyle(
+                          color: _statusMessage.contains('failed')
+                              ? Colors.red
+                              : _statusMessage.contains('Found')
+                                  ? Colors.green
+                                  : Colors.grey,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
                 ),
+                if (!_locationServicesEnabled) ...[
+                  const SizedBox(height: 8),
+                  ElevatedButton.icon(
+                    onPressed: _enableLocationServices,
+                    icon: const Icon(Icons.settings),
+                    label: const Text('Enable Location Services'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 16),
                 Row(
                   children: [
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: _isScanning ? _stopScan : _startScan,
+                        onPressed: (!_locationServicesEnabled || !_permissionsGranted)
+                            ? null
+                            : _isScanning
+                                ? _stopScan
+                                : _startScan,
                         icon: _isScanning
                             ? const SizedBox(
                                 height: 16,
