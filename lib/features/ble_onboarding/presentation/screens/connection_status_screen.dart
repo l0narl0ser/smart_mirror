@@ -10,8 +10,8 @@ class ConnectionStatusScreen extends StatefulWidget {
 
 class _ConnectionStatusScreenState extends State<ConnectionStatusScreen> {
   final _mqttService = MqttService();
-  String _mqttStatus = 'Not connected';
-  final String _bleStatus = 'Not connected';
+  String _mqttStatus = 'Не подключено';
+  final String _bleStatus = 'Не подключено';
 
   @override
   void initState() {
@@ -53,7 +53,7 @@ class _ConnectionStatusScreenState extends State<ConnectionStatusScreen> {
                         ),
                         const SizedBox(width: 12),
                         const Text(
-                          'MQTT Connection',
+                          'Подключение',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -66,11 +66,11 @@ class _ConnectionStatusScreenState extends State<ConnectionStatusScreen> {
                     Text(
                       _mqttStatus,
                       style: TextStyle(
-                        color: _mqttStatus.contains('failed')
-                            ? Colors.red
-                            : _mqttStatus.contains('Connected')
-                                ? Colors.green
-                                : Colors.grey[700],
+                      color: _mqttStatus.contains('Ошибка')
+                          ? Colors.red
+                          : _mqttStatus.contains('Подключено')
+                              ? Colors.green
+                              : Colors.grey[700],
                       ),
                     ),
                   ],
@@ -93,7 +93,7 @@ class _ConnectionStatusScreenState extends State<ConnectionStatusScreen> {
                         ),
                         const SizedBox(width: 12),
                         const Text(
-                          'BLE Connection',
+                          'Bluetooth',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,

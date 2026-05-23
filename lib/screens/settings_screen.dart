@@ -19,7 +19,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final _passwordController = TextEditingController();
 
   bool _isConnecting = false;
-  String _connectionStatus = 'Not connected';
+  String _connectionStatus = 'Не подключено';
 
   @override
   void initState() {
@@ -45,7 +45,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     setState(() {
       _isConnecting = true;
-      _connectionStatus = 'Connecting...';
+      _connectionStatus = 'Подключение...';
     });
 
     try {
@@ -70,7 +70,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
 
       setState(() {
-        _connectionStatus = 'Connected to ${_brokerController.text}:${_portController.text}';
+        _connectionStatus = 'Подключено к ${_brokerController.text}:${_portController.text}';
       });
 
       if (mounted) {
@@ -78,7 +78,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
     } catch (e) {
       setState(() {
-        _connectionStatus = 'Connection failed: $e';
+        _connectionStatus = 'Ошибка подключения: $e';
       });
     } finally {
       setState(() {
@@ -91,7 +91,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('MQTT Settings'),
+        title: const Text('Настройки'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -102,13 +102,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               TextFormField(
                 controller: _brokerController,
                 decoration: const InputDecoration(
-                  labelText: 'Broker Host',
+                  labelText: 'Адрес сервера',
                   hintText: 'localhost',
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter broker host';
+                    return 'Введите адрес сервера';
                   }
                   return null;
                 },
@@ -117,18 +117,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
               TextFormField(
                 controller: _portController,
                 decoration: const InputDecoration(
-                  labelText: 'Port',
+                  labelText: 'Порт',
                   hintText: '1883',
                   border: OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter port';
+                    return 'Введите порт';
                   }
                   final port = int.tryParse(value);
                   if (port == null || port <= 0 || port > 65535) {
-                    return 'Please enter valid port (1-65535)';
+                    return 'Введите корректный порт (1-65535)';
                   }
                   return null;
                 },
@@ -137,13 +137,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               TextFormField(
                 controller: _topicPrefixController,
                 decoration: const InputDecoration(
-                  labelText: 'Topic Prefix',
+                  labelText: 'Префикс топика',
                   hintText: 'mirror/',
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter topic prefix';
+                    return 'Введите префикс топика';
                   }
                   return null;
                 },
@@ -152,13 +152,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               TextFormField(
                 controller: _clientIdController,
                 decoration: const InputDecoration(
-                  labelText: 'Client ID',
+                  labelText: 'Идентификатор клиента',
                   hintText: 'smart_mirror_ui',
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter client ID';
+                    return 'Введите идентификатор клиента';
                   }
                   return null;
                 },
@@ -167,7 +167,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               TextFormField(
                 controller: _usernameController,
                 decoration: const InputDecoration(
-                  labelText: 'Username (optional)',
+                  labelText: 'Имя пользователя (необязательно)',
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -175,7 +175,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               TextFormField(
                 controller: _passwordController,
                 decoration: const InputDecoration(
-                  labelText: 'Password (optional)',
+                  labelText: 'Пароль (необязательно)',
                   border: OutlineInputBorder(),
                 ),
                 obscureText: true,
@@ -184,9 +184,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Text(
                 _connectionStatus,
                 style: TextStyle(
-                  color: _connectionStatus.contains('failed')
+                  color: _connectionStatus.contains('Ошибка')
                       ? Colors.red
-                      : _connectionStatus.contains('Connected')
+                      : _connectionStatus.contains('Подключено')
                           ? Colors.green
                           : Colors.grey,
                 ),
@@ -200,7 +200,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         width: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Connect'),
+                    : const Text('Подключить'),
               ),
             ],
           ),

@@ -19,7 +19,7 @@ class _BleScanScreenState extends State<BleScanScreen> {
   bool _isScanning = false;
   bool _permissionsGranted = false;
   bool _locationServicesEnabled = false;
-  String _statusMessage = 'Check permissions to start scanning';
+  String _statusMessage = 'Проверьте разрешения для начала сканирования';
   StreamSubscription<List<BleDeviceModel>>? _scanSubscription;
   Timer? _scanTimeoutTimer;
 
@@ -46,15 +46,15 @@ class _BleScanScreenState extends State<BleScanScreen> {
         locationEnabled) {
       setState(() {
         _permissionsGranted = true;
-        _statusMessage = 'Tap scan to find devices';
+        _statusMessage = 'Нажмите сканирование для поиска устройств';
       });
     } else {
       setState(() {
         _permissionsGranted = false;
         if (!locationEnabled) {
-          _statusMessage = 'Location services are OFF. BLE scanning requires GPS to be enabled.';
+          _statusMessage = 'Служба геолокации отключена. Для поиска устройств по Bluetooth необходимо включить GPS.';
         } else {
-          _statusMessage = 'Permissions denied. Please enable them in settings.';
+          _statusMessage = 'Разрешения отклонены. Включите их в настройках.';
         }
       });
     }
@@ -73,22 +73,22 @@ class _BleScanScreenState extends State<BleScanScreen> {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Location Services Required'),
+            title: const Text('Требуется геолокация'),
             content: const Text(
-              'BLE scanning requires Location services (GPS) to be enabled on Android. '
-              'Please enable it in your device settings.',
+              'Для поиска устройств по Bluetooth на Android необходимо включить службу геолокации. '
+              'Пожалуйста, включите её в настройках устройства.',
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
+                child: const Text('Отмена'),
               ),
               ElevatedButton(
                 onPressed: () {
                   Navigator.pop(context);
                   _enableLocationServices();
                 },
-                child: const Text('Open Settings'),
+                child: const Text('Открыть настройки'),
               ),
             ],
           ),
@@ -105,7 +105,7 @@ class _BleScanScreenState extends State<BleScanScreen> {
     setState(() {
       _isScanning = true;
       _devices.clear();
-      _statusMessage = 'Scanning for devices...';
+      _statusMessage = 'Сканирование устройств...';
     });
 
     _scanTimeoutTimer?.cancel();
@@ -137,22 +137,22 @@ class _BleScanScreenState extends State<BleScanScreen> {
       setState(() {
         _isScanning = false;
         if (_devices.isEmpty) {
-          _statusMessage = 'No devices found. Make sure SMART_MIRROR is powered on.';
+          _statusMessage = 'Устройства не найдены. Убедитесь, что устройство включено.';
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('No devices found.'),
+              content: Text('Устройства не найдены.'),
               duration: Duration(seconds: 3),
             ),
           );
           Future.delayed(const Duration(seconds: 3), () {
             if (mounted) {
               setState(() {
-                _statusMessage = 'Tap scan to find devices';
+                _statusMessage = 'Нажмите сканирование для поиска устройств';
               });
             }
           });
         } else {
-          _statusMessage = 'Found ${_devices.length} device(s)';
+          _statusMessage = 'Найдено устройств: ${_devices.length}';
         }
       });
     }
@@ -162,18 +162,18 @@ class _BleScanScreenState extends State<BleScanScreen> {
     await _stopScan();
     if (mounted) {
       setState(() {
-        _statusMessage = 'No devices found within 30 seconds. Please try again.';
+        _statusMessage = 'Устройства не найдены за 30 секунд. Попробуйте снова.';
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Scan timeout: No devices found.'),
+          content: Text('Тайм-аут сканирования: устройства не найдены.'),
           duration: Duration(seconds: 3),
         ),
       );
       Future.delayed(const Duration(seconds: 3), () {
         if (mounted) {
           setState(() {
-            _statusMessage = 'Tap scan to find devices';
+            _statusMessage = 'Нажмите сканирование для поиска устройств';
           });
         }
       });
@@ -187,7 +187,7 @@ class _BleScanScreenState extends State<BleScanScreen> {
     if (mounted) {
       setState(() {
         _isScanning = false;
-        _statusMessage = 'Scan stopped';
+        _statusMessage = 'Сканирование остановлено';
       });
     }
   }
@@ -196,7 +196,7 @@ class _BleScanScreenState extends State<BleScanScreen> {
     try {
       if (!mounted) return;
       setState(() {
-        _statusMessage = 'Connecting to ${device.name}...';
+        _statusMessage = 'Подключение к ${device.name}...';
       });
 
       final connected = await _bleRepository.connectToDevice(device.id);
@@ -215,10 +215,10 @@ class _BleScanScreenState extends State<BleScanScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _statusMessage = 'Connection failed: $e';
+          _statusMessage = 'Ошибка подключения: $e';
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to connect: $e')),
+          SnackBar(content: Text('Ошибка подключения: $e')),
         );
       }
     }
@@ -236,7 +236,7 @@ class _BleScanScreenState extends State<BleScanScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('BLE Device Scan'),
+        title: const Text('Поиск устройств'),
       ),
       body: Column(
         children: [
@@ -259,9 +259,9 @@ class _BleScanScreenState extends State<BleScanScreen> {
                       child: Text(
                         _statusMessage,
                         style: TextStyle(
-                          color: _statusMessage.contains('failed')
+                          color: _statusMessage.contains('Ошибка')
                               ? Colors.red
-                              : _statusMessage.contains('Found')
+                              : _statusMessage.contains('Найдено')
                                   ? Colors.green
                                   : Colors.grey,
                         ),
@@ -275,7 +275,7 @@ class _BleScanScreenState extends State<BleScanScreen> {
                   ElevatedButton.icon(
                     onPressed: _enableLocationServices,
                     icon: const Icon(Icons.settings),
-                    label: const Text('Enable Location Services'),
+                    label: const Text('Включить геолокацию'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
                       foregroundColor: Colors.white,
@@ -302,7 +302,7 @@ class _BleScanScreenState extends State<BleScanScreen> {
                                 ),
                               )
                             : const Icon(Icons.bluetooth_searching),
-                        label: Text(_isScanning ? 'Stop Scan' : 'Start Scan'),
+                        label: Text(_isScanning ? 'Остановить' : 'Начать сканирование'),
                       ),
                     ),
                     if (!_permissionsGranted) ...[
@@ -310,7 +310,7 @@ class _BleScanScreenState extends State<BleScanScreen> {
                       ElevatedButton.icon(
                         onPressed: _checkPermissions,
                         icon: const Icon(Icons.settings),
-                        label: const Text('Permissions'),
+                        label: const Text('Разрешения'),
                       ),
                     ],
                   ],
@@ -332,7 +332,7 @@ class _BleScanScreenState extends State<BleScanScreen> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          _isScanning ? 'Searching...' : 'No devices found',
+                          _isScanning ? 'Поиск...' : 'Устройства не найдены',
                           style: TextStyle(
                             color: Colors.grey[600],
                             fontSize: 16,
@@ -354,11 +354,11 @@ class _BleScanScreenState extends State<BleScanScreen> {
                           leading: const Icon(Icons.bluetooth),
                           title: Text(device.name),
                           subtitle: Text(
-                            'ID: ${device.id}\nRSSI: ${device.rssi}',
+                            'Идентификатор: ${device.id}\nСигнал: ${device.rssi}',
                           ),
                           trailing: ElevatedButton(
                             onPressed: () => _connectToDevice(device),
-                            child: const Text('Connect'),
+                            child: const Text('Подключить'),
                           ),
                         ),
                       );

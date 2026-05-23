@@ -54,7 +54,7 @@ class MqttService {
       await _client!.connect();
     } catch (e) {
       _isConnected = false;
-      onConnectionStatusChanged?.call('Connection failed: $e');
+      onConnectionStatusChanged?.call('Ошибка подключения: $e');
       _client!.disconnect();
       rethrow;
     }
@@ -62,13 +62,13 @@ class MqttService {
 
   void _onConnected() {
     _isConnected = true;
-      onConnectionStatusChanged?.call('Connected to $_broker:$_port');
+      onConnectionStatusChanged?.call('Подключено к $_broker:$_port');
     _subscribe();
   }
 
   void _onDisconnected() {
     _isConnected = false;
-    onConnectionStatusChanged?.call('Disconnected');
+    onConnectionStatusChanged?.call('Отключено');
   }
 
   void _subscribe() {
@@ -83,7 +83,7 @@ class MqttService {
 
   Future<void> publish(String topic, Map<String, dynamic> payload) async {
     if (!_isConnected || _client == null) {
-      throw Exception('Not connected to MQTT broker');
+      throw Exception('Нет подключения к серверу');
     }
     final builder = MqttClientPayloadBuilder();
     builder.addString(jsonEncode(payload));

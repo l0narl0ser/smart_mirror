@@ -49,17 +49,17 @@ class _MainScreenState extends State<MainScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Restart Device'),
-        content: const Text('Are you sure you want to restart the smart mirror?'),
+        title: const Text('Перезагрузка устройства'),
+        content: const Text('Вы уверены, что хотите перезагрузить умное зеркало?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: const Text('Отмена'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Restart'),
+            child: const Text('Перезагрузить'),
           ),
         ],
       ),
@@ -70,12 +70,12 @@ class _MainScreenState extends State<MainScreen> {
         await _mqttService.restartDevice();
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Restart command sent')),
+          const SnackBar(content: Text('Команда перезагрузки отправлена')),
         );
       } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to restart: $e')),
+          SnackBar(content: Text('Ошибка перезагрузки: $e')),
         );
       }
     }
@@ -94,7 +94,7 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Smart Mirror'),
+        title: const Text('Умное Зеркало'),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
@@ -117,17 +117,17 @@ class _MainScreenState extends State<MainScreen> {
           NavigationDestination(
             icon: Icon(Icons.home_outlined),
             selectedIcon: Icon(Icons.home),
-            label: 'Control',
+            label: 'Управление',
           ),
           NavigationDestination(
             icon: Icon(Icons.alarm_outlined),
             selectedIcon: Icon(Icons.alarm),
-            label: 'Alarms',
+            label: 'Будильники',
           ),
           NavigationDestination(
             icon: Icon(Icons.bluetooth_searching),
             selectedIcon: Icon(Icons.bluetooth),
-            label: 'BLE Setup',
+            label: 'Настройка',
           ),
         ],
       ),
@@ -142,7 +142,7 @@ class _MainScreenState extends State<MainScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Device Control',
+              'Управление устройством',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
@@ -151,7 +151,7 @@ class _MainScreenState extends State<MainScreen> {
               child: ElevatedButton(
                 onPressed: _restartDevice,
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                child: const Text('Restart Device'),
+                child: const Text('Перезагрузить устройство'),
               ),
             ),
           ],
@@ -168,7 +168,7 @@ class _MainScreenState extends State<MainScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Last Message',
+              'Последнее сообщение',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
@@ -180,7 +180,7 @@ class _MainScreenState extends State<MainScreen> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                _lastMessage.isEmpty ? 'No messages received' : _lastMessage,
+                _lastMessage.isEmpty ? 'Сообщений нет' : _lastMessage,
                 style: const TextStyle(fontFamily: 'monospace'),
               ),
             ),

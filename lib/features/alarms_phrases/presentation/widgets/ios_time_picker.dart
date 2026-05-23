@@ -56,7 +56,7 @@ class _IosTimePickerState extends State<IosTimePicker> {
             child: _buildColumn(
               controller: _hourController,
               itemCount: 24,
-              label: 'Hour',
+              label: 'Часы',
               onSelectedItemChanged: (index) {
                 setState(() {
                   _selectedHour = index;
@@ -77,7 +77,7 @@ class _IosTimePickerState extends State<IosTimePicker> {
             child: _buildColumn(
               controller: _minuteController,
               itemCount: 60,
-              label: 'Min',
+              label: 'Минуты',
               onSelectedItemChanged: (index) {
                 setState(() {
                   _selectedMinute = index;

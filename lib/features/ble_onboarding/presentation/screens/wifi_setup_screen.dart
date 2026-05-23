@@ -26,7 +26,7 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
 
   bool _isSending = false;
   bool _obscurePassword = true;
-  String _deviceStatus = 'Waiting for input';
+  String _deviceStatus = 'Ожидание ввода';
   StreamSubscription<String>? _statusSubscription;
 
   @override
@@ -50,14 +50,14 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
       } else if (status == 'wrong_password') {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Wrong Wi-Fi password. Please try again.'),
+            content: Text('Неверный пароль Wi-Fi. Попробуйте снова.'),
             backgroundColor: Colors.red,
           ),
         );
       } else if (status == 'error') {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Failed to connect to Wi-Fi. Check the network name and try again.'),
+            content: Text('Ошибка подключения к Wi-Fi. Проверьте имя сети и попробуйте снова.'),
             backgroundColor: Colors.orange,
           ),
         );
@@ -68,17 +68,17 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
   String _mapStatusToMessage(String status) {
     switch (status) {
       case 'connecting':
-        return 'Device is connecting to Wi-Fi...';
+        return 'Устройство подключается к Wi-Fi...';
       case 'connected':
-        return 'Successfully connected to Wi-Fi!';
+        return 'Успешное подключение к Wi-Fi!';
       case 'wrong_password':
-        return 'Wrong Wi-Fi password';
+        return 'Неверный пароль Wi-Fi';
       case 'error':
-        return 'Connection failed. Check network name and password.';
+        return 'Ошибка подключения. Проверьте имя сети и пароль.';
       case 'no_internet':
-        return 'Connected but no internet access';
+        return 'Подключено, но нет доступа к интернету';
       default:
-        return 'Status: $status';
+        return 'Статус: $status';
     }
   }
 
@@ -91,41 +91,39 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
           children: [
             Icon(Icons.check_circle, color: Colors.green),
             SizedBox(width: 8),
-            Text('Connected!'),
+            Text('Подключено!'),
           ],
         ),
         content: const Text(
-          'Smart Mirror successfully connected to Wi-Fi.\n\n'
-          'Want to switch to a different network?',
+          'Умное зеркало успешно подключено к Wi-Fi.\n\n'
+          'Хотите переключиться на другую сеть?',
         ),
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.of(context).pop(); // close dialog
-              _resetForNetworkSwitch();   // stay on screen, reset form
+              Navigator.of(context).pop();
+              _resetForNetworkSwitch();
             },
-            child: const Text('Change Network'),
+            child: const Text('Сменить сеть'),
           ),
           ElevatedButton(
             onPressed: () {
-              Navigator.of(context).pop(); // close dialog
-              Navigator.of(context).pop(true); // return to scan screen
+              Navigator.of(context).pop();
+              Navigator.of(context).pop(true);
             },
-            child: const Text('Done'),
+            child: const Text('Готово'),
           ),
         ],
       ),
     );
   }
 
-  /// Resets the form so the user can send new Wi-Fi credentials
-  /// without disconnecting from the device.
   void _resetForNetworkSwitch() {
     setState(() {
       _isSending = false;
       _ssidController.clear();
       _passwordController.clear();
-      _deviceStatus = 'Enter new network credentials';
+      _deviceStatus = 'Введите данные новой сети';
     });
   }
 
@@ -134,7 +132,7 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
 
     setState(() {
       _isSending = true;
-      _deviceStatus = 'Sending credentials...';
+      _deviceStatus = 'Отправка данных...';
     });
 
     try {
@@ -147,17 +145,17 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
 
       if (mounted) {
         setState(() {
-          _deviceStatus = 'Credentials sent. Waiting for device...';
+          _deviceStatus = 'Данные отправлены. Ожидание устройства...';
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
           _isSending = false;
-          _deviceStatus = 'Failed to send: $e';
+          _deviceStatus = 'Ошибка отправки: $e';
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to send credentials: $e')),
+          SnackBar(content: Text('Ошибка отправки данных: $e')),
         );
       }
     }
@@ -187,7 +185,7 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
           IconButton(
             icon: const Icon(Icons.bluetooth_disabled),
             onPressed: _disconnect,
-            tooltip: 'Disconnect',
+            tooltip: 'Отключить',
           ),
         ],
       ),
@@ -210,7 +208,7 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'Connected to ${widget.deviceName}',
+                            'Подключено к ${widget.deviceName}',
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -219,13 +217,13 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
                         ],
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        'Device ID: ${widget.deviceId}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
+                        Text(
+                          'Идентификатор: ${widget.deviceId}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),
@@ -234,14 +232,14 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
               TextFormField(
                 controller: _ssidController,
                 decoration: const InputDecoration(
-                  labelText: 'Wi-Fi Network Name (SSID)',
-                  hintText: 'Enter your Wi-Fi network name',
+                  labelText: 'Имя сети Wi-Fi',
+                  hintText: 'Введите имя сети Wi-Fi',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.wifi),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter Wi-Fi network name';
+                    return 'Введите имя сети Wi-Fi';
                   }
                   return null;
                 },
@@ -250,8 +248,8 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
               TextFormField(
                 controller: _passwordController,
                 decoration: InputDecoration(
-                  labelText: 'Wi-Fi Password',
-                  hintText: 'Enter your Wi-Fi password',
+                  labelText: 'Пароль Wi-Fi',
+                  hintText: 'Введите пароль Wi-Fi',
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.lock),
                   suffixIcon: IconButton(
@@ -268,10 +266,10 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
                 obscureText: _obscurePassword,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter Wi-Fi password';
+                    return 'Введите пароль Wi-Fi';
                   }
                   if (value.length < 8) {
-                    return 'Password must be at least 8 characters';
+                    return 'Пароль должен быть не менее 8 символов';
                   }
                   return null;
                 },
@@ -284,7 +282,7 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Device Status',
+                        'Статус устройства',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -304,11 +302,11 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
                             child: Text(
                               _deviceStatus,
                               style: TextStyle(
-                                color: _deviceStatus.contains('Failed')
-                                    ? Colors.red
-                                    : _deviceStatus.contains('Success')
-                                        ? Colors.green
-                                        : Colors.grey[700],
+                              color: _deviceStatus.contains('Ошибка')
+                                  ? Colors.red
+                                  : _deviceStatus.contains('Успеш')
+                                      ? Colors.green
+                                      : Colors.grey[700],
                               ),
                             ),
                           ),
@@ -331,7 +329,7 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
                         ),
                       )
                     : const Icon(Icons.send),
-                label: Text(_isSending ? 'Sending...' : 'Connect / Switch Network'),
+                label: Text(_isSending ? 'Отправка...' : 'Подключить / Сменить сеть'),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
@@ -340,7 +338,7 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
               OutlinedButton.icon(
                 onPressed: _isSending ? null : _disconnect,
                 icon: const Icon(Icons.cancel),
-                label: const Text('Disconnect'),
+                label: const Text('Отключить'),
               ),
             ],
           ),

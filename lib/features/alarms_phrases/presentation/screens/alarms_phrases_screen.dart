@@ -47,15 +47,15 @@ class _AlarmsPhrasesScreenState extends State<AlarmsPhrasesScreen> with SingleTi
               children: [
                 TextButton(
                   onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Cancel'),
+                  child: const Text('Отмена'),
                 ),
                 const Text(
-                  'New Alarm',
+                  'Новый будильник',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 TextButton(
                   onPressed: () => Navigator.pop(context, true),
-                  child: const Text('Save', style: TextStyle(color: Colors.blue)),
+                  child: const Text('Сохранить', style: TextStyle(color: Colors.blue)),
                 ),
               ],
             ),
@@ -101,15 +101,15 @@ class _AlarmsPhrasesScreenState extends State<AlarmsPhrasesScreen> with SingleTi
               children: [
                 TextButton(
                   onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Cancel'),
+                  child: const Text('Отмена'),
                 ),
                 const Text(
-                  'Edit Alarm',
+                  'Изменить будильник',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 TextButton(
                   onPressed: () => Navigator.pop(context, true),
-                  child: const Text('Save', style: TextStyle(color: Colors.blue)),
+                  child: const Text('Сохранить', style: TextStyle(color: Colors.blue)),
                 ),
               ],
             ),
@@ -171,7 +171,7 @@ class _AlarmsPhrasesScreenState extends State<AlarmsPhrasesScreen> with SingleTi
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to set alarm: $e')),
+          SnackBar(content: Text('Ошибка установки будильника: $e')),
         );
       }
     }
@@ -183,7 +183,7 @@ class _AlarmsPhrasesScreenState extends State<AlarmsPhrasesScreen> with SingleTi
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to clear alarm: $e')),
+          SnackBar(content: Text('Ошибка сброса будильника: $e')),
         );
       }
     }
@@ -192,7 +192,7 @@ class _AlarmsPhrasesScreenState extends State<AlarmsPhrasesScreen> with SingleTi
   void _addPhrase() {
     if (_phrases.length >= maxPhrases) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Maximum $maxPhrases phrases allowed')),
+        SnackBar(content: Text('Максимум $maxPhrases фраз')),
       );
       return;
     }
@@ -202,11 +202,11 @@ class _AlarmsPhrasesScreenState extends State<AlarmsPhrasesScreen> with SingleTi
       builder: (context) {
         final controller = TextEditingController();
         return AlertDialog(
-          title: const Text('New Phrase'),
+          title: const Text('Новая фраза'),
           content: TextField(
             controller: controller,
             decoration: const InputDecoration(
-              hintText: 'Enter phrase...',
+              hintText: 'Введите фразу...',
               border: OutlineInputBorder(),
             ),
             maxLines: 3,
@@ -216,7 +216,7 @@ class _AlarmsPhrasesScreenState extends State<AlarmsPhrasesScreen> with SingleTi
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: const Text('Отмена'),
             ),
             TextButton(
               onPressed: () {
@@ -228,7 +228,7 @@ class _AlarmsPhrasesScreenState extends State<AlarmsPhrasesScreen> with SingleTi
                   Navigator.pop(context);
                 }
               },
-              child: const Text('Add'),
+              child: const Text('Добавить'),
             ),
           ],
         );
@@ -242,11 +242,11 @@ class _AlarmsPhrasesScreenState extends State<AlarmsPhrasesScreen> with SingleTi
       builder: (context) {
         final controller = TextEditingController(text: phrase.text);
         return AlertDialog(
-          title: const Text('Edit Phrase'),
+          title: const Text('Изменить фразу'),
           content: TextField(
             controller: controller,
             decoration: const InputDecoration(
-              hintText: 'Enter phrase...',
+              hintText: 'Введите фразу...',
               border: OutlineInputBorder(),
             ),
             maxLines: 3,
@@ -256,7 +256,7 @@ class _AlarmsPhrasesScreenState extends State<AlarmsPhrasesScreen> with SingleTi
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: const Text('Отмена'),
             ),
             TextButton(
               onPressed: () {
@@ -268,7 +268,7 @@ class _AlarmsPhrasesScreenState extends State<AlarmsPhrasesScreen> with SingleTi
                   Navigator.pop(context);
                 }
               },
-              child: const Text('Save'),
+              child: const Text('Сохранить'),
             ),
           ],
         );
@@ -292,12 +292,12 @@ class _AlarmsPhrasesScreenState extends State<AlarmsPhrasesScreen> with SingleTi
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Alarms & Phrases'),
+        title: const Text('Будильники и фразы'),
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
-            Tab(icon: Icon(Icons.alarm), text: 'Alarms'),
-            Tab(icon: Icon(Icons.format_quote), text: 'Phrases'),
+            Tab(icon: Icon(Icons.alarm), text: 'Будильники'),
+            Tab(icon: Icon(Icons.format_quote), text: 'Фразы'),
           ],
         ),
       ),
@@ -323,7 +323,7 @@ class _AlarmsPhrasesScreenState extends State<AlarmsPhrasesScreen> with SingleTi
                       Icon(Icons.alarm_add, size: 64, color: Colors.grey[400]),
                       const SizedBox(height: 16),
                       Text(
-                        'No alarms set',
+                        'Нет будильников',
                         style: TextStyle(color: Colors.grey[600], fontSize: 16),
                       ),
                     ],
@@ -342,7 +342,7 @@ class _AlarmsPhrasesScreenState extends State<AlarmsPhrasesScreen> with SingleTi
                           style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w300),
                         ),
                         subtitle: Text(
-                          alarm.isEnabled ? 'Enabled' : 'Disabled',
+                          alarm.isEnabled ? 'Включен' : 'Отключен',
                           style: TextStyle(
                             color: alarm.isEnabled ? Colors.green : Colors.grey,
                           ),
@@ -377,7 +377,7 @@ class _AlarmsPhrasesScreenState extends State<AlarmsPhrasesScreen> with SingleTi
             child: ElevatedButton.icon(
               onPressed: _addAlarm,
               icon: const Icon(Icons.add),
-              label: const Text('Add Alarm'),
+              label: const Text('Добавить будильник'),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
@@ -397,13 +397,13 @@ class _AlarmsPhrasesScreenState extends State<AlarmsPhrasesScreen> with SingleTi
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '${_phrases.length}/$maxPhrases phrases',
+                '${_phrases.length}/$maxPhrases фраз',
                 style: TextStyle(color: Colors.grey[600]),
               ),
               ElevatedButton.icon(
                 onPressed: _phrases.length >= maxPhrases ? null : _addPhrase,
                 icon: const Icon(Icons.add),
-                label: const Text('Add Phrase'),
+                label: const Text('Добавить фразу'),
               ),
             ],
           ),
@@ -417,7 +417,7 @@ class _AlarmsPhrasesScreenState extends State<AlarmsPhrasesScreen> with SingleTi
                       Icon(Icons.format_quote, size: 64, color: Colors.grey[400]),
                       const SizedBox(height: 16),
                       Text(
-                        'No phrases added',
+                        'Нет фраз',
                         style: TextStyle(color: Colors.grey[600], fontSize: 16),
                       ),
                     ],
