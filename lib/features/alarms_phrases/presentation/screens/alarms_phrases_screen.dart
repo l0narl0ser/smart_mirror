@@ -210,6 +210,7 @@ class _AlarmsPhrasesScreenState extends State<AlarmsPhrasesScreen> with SingleTi
               border: OutlineInputBorder(),
             ),
             maxLines: 3,
+            maxLength: 30,
             autofocus: true,
           ),
           actions: [
@@ -249,6 +250,7 @@ class _AlarmsPhrasesScreenState extends State<AlarmsPhrasesScreen> with SingleTi
               border: OutlineInputBorder(),
             ),
             maxLines: 3,
+            maxLength: 30,
             autofocus: true,
           ),
           actions: [
