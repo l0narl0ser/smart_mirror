@@ -28,4 +28,22 @@ class AlarmModel {
       isEnabled: isEnabled ?? this.isEnabled,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'hour': hour,
+      'minute': minute,
+      'isEnabled': isEnabled,
+    };
+  }
+
+  factory AlarmModel.fromJson(Map<String, dynamic> json) {
+    return AlarmModel(
+      id: json['id'] as String,
+      hour: json['hour'] as int,
+      minute: json['minute'] as int,
+      isEnabled: json['isEnabled'] as bool? ?? true,
+    );
+  }
 }

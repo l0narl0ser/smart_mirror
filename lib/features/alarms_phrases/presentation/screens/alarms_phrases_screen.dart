@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 import '../../../../services/mqtt_service.dart';
 import '../../models/alarm_model.dart';
 import '../../models/phrase_model.dart';
+import '../../services/alarms_phrases_service.dart';
 import '../widgets/ios_time_picker.dart';
 
 class AlarmsPhrasesScreen extends StatefulWidget {
@@ -14,11 +15,12 @@ class AlarmsPhrasesScreen extends StatefulWidget {
 
 class _AlarmsPhrasesScreenState extends State<AlarmsPhrasesScreen> with SingleTickerProviderStateMixin {
   final _mqttService = MqttService();
+  final _alarmsPhrasesService = AlarmsPhrasesService();
   final _uuid = const Uuid();
   late TabController _tabController;
 
-  final List<AlarmModel> _alarms = [];
-  final List<PhraseModel> _phrases = [];
+  List<AlarmModel> _alarms = [];
+  List<PhraseModel> _phrases = [];
   static const int maxPhrases = 20;
 
   int _selectedHour = 7;
@@ -29,6 +31,18 @@ class _AlarmsPhrasesScreenState extends State<AlarmsPhrasesScreen> with SingleTi
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    final alarms = await _alarmsPhrasesService.loadAlarms();
+    final phrases = await _alarmsPhrasesService.loadPhrases();
+    if (mounted) {
+      setState(() {
+        _alarms = alarms;
+        _phrases = phrases;
+      });
+    }
   }
 
   Future<void> _addAlarm() async {
@@ -81,6 +95,7 @@ class _AlarmsPhrasesScreenState extends State<AlarmsPhrasesScreen> with SingleTi
       setState(() {
         _alarms.add(alarm);
       });
+      await _alarmsPhrasesService.saveAlarms(_alarms);
       _sendAlarmToMqtt(alarm);
     }
   }
@@ -138,19 +153,21 @@ class _AlarmsPhrasesScreenState extends State<AlarmsPhrasesScreen> with SingleTi
           );
         }
       });
+      await _alarmsPhrasesService.saveAlarms(_alarms);
       _sendAlarmToMqtt(
         AlarmModel(id: alarm.id, hour: hour, minute: minute, isEnabled: alarm.isEnabled),
       );
     }
   }
 
-  void _toggleAlarm(AlarmModel alarm) {
+  Future<void> _toggleAlarm(AlarmModel alarm) async {
     setState(() {
       final index = _alarms.indexWhere((a) => a.id == alarm.id);
       if (index != -1) {
         _alarms[index].isEnabled = !_alarms[index].isEnabled;
       }
     });
+    await _alarmsPhrasesService.saveAlarms(_alarms);
     if (alarm.isEnabled) {
       _sendAlarmToMqtt(alarm);
     } else {
@@ -158,10 +175,11 @@ class _AlarmsPhrasesScreenState extends State<AlarmsPhrasesScreen> with SingleTi
     }
   }
 
-  void _deleteAlarm(AlarmModel alarm) {
+  Future<void> _deleteAlarm(AlarmModel alarm) async {
     setState(() {
       _alarms.removeWhere((a) => a.id == alarm.id);
     });
+    await _alarmsPhrasesService.saveAlarms(_alarms);
     _sendClearAlarmToMqtt(alarm);
   }
 
@@ -189,7 +207,7 @@ class _AlarmsPhrasesScreenState extends State<AlarmsPhrasesScreen> with SingleTi
     }
   }
 
-  void _addPhrase() {
+  Future<void> _addPhrase() async {
     if (_phrases.length >= maxPhrases) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Максимум $maxPhrases фраз')),
@@ -225,6 +243,7 @@ class _AlarmsPhrasesScreenState extends State<AlarmsPhrasesScreen> with SingleTi
                   setState(() {
                     _phrases.add(PhraseModel(id: _uuid.v4(), text: text));
                   });
+                  _alarmsPhrasesService.savePhrases(_phrases);
                   Navigator.pop(context);
                 }
               },
@@ -265,6 +284,7 @@ class _AlarmsPhrasesScreenState extends State<AlarmsPhrasesScreen> with SingleTi
                   setState(() {
                     phrase.text = text;
                   });
+                  _alarmsPhrasesService.savePhrases(_phrases);
                   Navigator.pop(context);
                 }
               },
@@ -276,10 +296,11 @@ class _AlarmsPhrasesScreenState extends State<AlarmsPhrasesScreen> with SingleTi
     );
   }
 
-  void _deletePhrase(PhraseModel phrase) {
+  Future<void> _deletePhrase(PhraseModel phrase) async {
     setState(() {
       _phrases.removeWhere((p) => p.id == phrase.id);
     });
+    await _alarmsPhrasesService.savePhrases(_phrases);
   }
 
   @override
