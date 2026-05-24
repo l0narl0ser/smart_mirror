@@ -11,6 +11,7 @@ class SettingsService {
   String get clientId => _prefs?.getString('clientId') ?? 'smart_mirror_ui';
   String? get username => _prefs?.getString('username');
   String? get password => _prefs?.getString('password');
+  String? get savedIp => _prefs?.getString('savedIp');
 
   SharedPreferences? _prefs;
 
@@ -36,5 +37,13 @@ class SettingsService {
     if (password != null) {
       await _prefs?.setString('password', password);
     }
+  }
+
+  Future<void> saveSavedIp(String ip) async {
+    await _prefs?.setString('savedIp', ip);
+  }
+
+  Future<void> clearSavedIp() async {
+    await _prefs?.remove('savedIp');
   }
 }

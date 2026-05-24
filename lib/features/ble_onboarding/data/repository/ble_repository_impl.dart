@@ -29,6 +29,15 @@ class BleRepositoryImpl implements BleRepository {
   Stream<String> get deviceStatusStream => _bleService.deviceStatusStream;
 
   @override
+  Stream<String> get deviceIpStream => _bleService.deviceIpStream;
+
+  @override
+  Stream<String> getDeviceIpStreamWithReplay() => _bleService.getDeviceIpStreamWithReplay();
+
+  @override
+  String? get lastReceivedIp => _bleService.lastReceivedIp;
+
+  @override
   Future<bool> connectToDevice(String deviceId) async {
     return await _bleService.connectToDevice(deviceId);
   }

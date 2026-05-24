@@ -184,9 +184,13 @@ class _AlarmsPhrasesScreenState extends State<AlarmsPhrasesScreen> with SingleTi
   }
 
   Future<void> _sendAlarmToMqtt(AlarmModel alarm) async {
+    debugPrint('[ALARMS] 📤 Отправка будильника ${alarm.hour}:${alarm.minute} через MQTT');
+    debugPrint('[ALARMS] 📊 MQTT isConnected=${_mqttService.isConnected}');
     try {
       await _mqttService.setAlarm(alarm.hour, alarm.minute);
+      debugPrint('[ALARMS] ✅ Будильник отправлен');
     } catch (e) {
+      debugPrint('[ALARMS] ❌ Ошибка: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Ошибка установки будильника: $e')),
@@ -196,9 +200,13 @@ class _AlarmsPhrasesScreenState extends State<AlarmsPhrasesScreen> with SingleTi
   }
 
   Future<void> _sendClearAlarmToMqtt(AlarmModel alarm) async {
+    debugPrint('[ALARMS] 📤 Сброс будильника ${alarm.hour}:${alarm.minute} через MQTT');
+    debugPrint('[ALARMS] 📊 MQTT isConnected=${_mqttService.isConnected}');
     try {
       await _mqttService.clearAlarm();
+      debugPrint('[ALARMS] ✅ Будильник сброшен');
     } catch (e) {
+      debugPrint('[ALARMS] ❌ Ошибка: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Ошибка сброса будильника: $e')),

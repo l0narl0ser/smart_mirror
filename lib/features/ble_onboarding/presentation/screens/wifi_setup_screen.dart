@@ -27,16 +27,43 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
   bool _isSending = false;
   bool _obscurePassword = true;
   String _deviceStatus = 'Ожидание ввода';
+  String? _receivedIp;
   StreamSubscription<String>? _statusSubscription;
+  StreamSubscription<String>? _ipSubscription;
 
   @override
   void initState() {
     super.initState();
+    debugPrint('[UI] 🚀 WifiSetupScreen init');
     _subscribeToDeviceStatus();
+    _subscribeToDeviceIp();
+  }
+
+  void _subscribeToDeviceIp() {
+    debugPrint('[UI] 📡 Подписка на deviceIpStream (с replay)');
+    _ipSubscription = widget.bleRepository.getDeviceIpStreamWithReplay().listen((ip) {
+      debugPrint('[UI] 📡 Получен IP: $ip');
+      if (!mounted) return;
+      setState(() {
+        _receivedIp = ip;
+      });
+    });
+
+    final existingIp = widget.bleRepository.lastReceivedIp;
+    if (existingIp != null) {
+      debugPrint('[UI] 📡 IP уже был получен ранее: $existingIp');
+      if (mounted) {
+        setState(() {
+          _receivedIp = existingIp;
+        });
+      }
+    }
   }
 
   void _subscribeToDeviceStatus() {
+    debugPrint('[UI] 📡 Подписка на deviceStatusStream');
     _statusSubscription = widget.bleRepository.deviceStatusStream.listen((status) {
+      debugPrint('[UI] 📡 Получен статус из стрима: $status');
       if (!mounted) return;
       setState(() {
         _deviceStatus = _mapStatusToMessage(status);
@@ -46,7 +73,9 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
       });
 
       if (status == 'connected') {
-        _showSuccessAndClose();
+        debugPrint('[UI] 🎉 Статус "connected" — вызываем _saveIpAndShowSuccess()');
+        debugPrint('[UI] Текущий _receivedIp: ${_receivedIp ?? "null"}');
+        _saveIpAndShowSuccess();
       } else if (status == 'wrong_password') {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -80,6 +109,11 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
       default:
         return 'Статус: $status';
     }
+  }
+
+  Future<void> _saveIpAndShowSuccess() async {
+    debugPrint('[UI] 💾 IP уже сохранён в BleService, показываем диалог');
+    _showSuccessAndClose();
   }
 
   void _showSuccessAndClose() {
@@ -171,6 +205,7 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
   @override
   void dispose() {
     _statusSubscription?.cancel();
+    _ipSubscription?.cancel();
     _ssidController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -316,6 +351,44 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
                   ),
                 ),
               ),
+              if (_receivedIp != null && _receivedIp!.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Card(
+                  color: Colors.green[50],
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.lan, color: Colors.green[700]),
+                            const SizedBox(width: 8),
+                            Text(
+                              'IP устройства',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green[700],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _receivedIp!,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'monospace',
+                            color: Colors.green[800],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: 24),
               ElevatedButton.icon(
                 onPressed: _isSending ? null : _sendCredentials,
