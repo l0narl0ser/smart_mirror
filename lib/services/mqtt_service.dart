@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:typed_data/typed_data.dart' as typed;
 import 'package:flutter/foundation.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
@@ -26,6 +27,7 @@ class MqttService {
 
   Function(String topic, String payload)? onMessageReceived;
   Function(String status)? onConnectionStatusChanged;
+  Function()? onConnected;
 
   Future<String> _resolveHost(String host) async {
     final result = await InternetAddress.lookup(host);
@@ -93,6 +95,7 @@ class MqttService {
     debugPrint('[MQTT] ✅ _onConnected вызван! isConnected=true');
     _isConnected = true;
     onConnectionStatusChanged?.call('Подключено к $_broker:$_port');
+    onConnected?.call();
     _subscribe();
   }
 
@@ -121,8 +124,10 @@ class MqttService {
       debugPrint('[MQTT] ❌ Нет подключения к серверу! isConnected=$_isConnected, _client=${_client != null}');
       throw Exception('Нет подключения к серверу');
     }
+    final buffer = typed.Uint8Buffer();
+    buffer.addAll(utf8.encode(jsonEncode(payload)));
     final builder = MqttClientPayloadBuilder();
-    builder.addString(jsonEncode(payload));
+    builder.addBuffer(buffer);
     debugPrint('[MQTT] 📤 Отправка...');
     _client!.publishMessage('$_topicPrefix$topic', MqttQos.atMostOnce, builder.payload!);
     debugPrint('[MQTT] ✅ publishMessage вызван');

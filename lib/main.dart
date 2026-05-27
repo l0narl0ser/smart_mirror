@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'services/settings_service.dart';
 import 'services/mqtt_service.dart';
+import 'services/location_service.dart';
 import 'features/ble_onboarding/data/service/ble_service.dart';
 import 'features/alarms_phrases/services/alarms_phrases_service.dart';
 import 'screens/main_screen.dart';
@@ -22,11 +23,26 @@ Future<void> _tryAutoConnectMqtt() async {
       debugPrint('[MAIN] 🔄 Попытка подключения к MQTT...');
       await MqttService().connect();
       debugPrint('[MAIN] ✅ MQTT подключён');
+      await _sendLocation();
     } catch (e) {
       debugPrint('[MAIN] ❌ Auto MQTT connection failed: $e');
     }
   } else {
     debugPrint('[MAIN] ⚠️ savedIp отсутствует, автоподключение пропущено');
+  }
+}
+
+Future<void> _sendLocation() async {
+  final location = await LocationService().getCurrentLocation();
+  if (location != null) {
+    await MqttService().setLocation(
+      location.latitude,
+      location.longitude,
+      city: location.city,
+    );
+    debugPrint('[MAIN] ✅ Локация отправлена: ${location.latitude}, ${location.longitude}, ${location.city}');
+  } else {
+    debugPrint('[MAIN] ❌ Не удалось получить локацию');
   }
 }
 
